@@ -1,0 +1,24 @@
+{
+    "faq": [
+        {
+            "title": "What is Mors Manipulus?",
+            "text":"Mors Manipulus is an app that allows you to calculate how much power you need to run your home."
+        },
+        {
+            "title": "Do i need to pay to use the platform?",
+            "text":"No, Mors Manipulus is a completely free app and no payment is required."
+        },
+        {
+            "title": "Do i need to signup?",
+            "text":"Mors Manipulus does require any registration, just open calculator and you are ready to go."
+        },
+        {
+            "title": "Do we sell solar panels?",
+            "text":"No, we currently do not sell."
+        },
+        {
+            "title": "How often can i use Mors Manipulus?",
+            "text":"Anyday, Anytime."
+        }
+    ]
+}

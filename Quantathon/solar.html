@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 50px;
+        }
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .button {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        #myChart {
+            width: 100%;
+            height: 400px;
+        }
+        .resolution-controls {
+            margin-top: 15px;
+        }
+        .resolution-button {
+            background-color: #f0f0f0;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .resolution-button.active {
+            background-color: #ffcc66;
+        }
+        .value-display {
+            margin-top: 20px;
+            font-size: 18px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .tabs {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .tab-button {
+            background-color: #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #ffcc66;
+        }
+        .tab-content {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 900px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <!-- Buttons Grid -->
+    <div class="buttons-grid">
+        <div class="button" data-value="Cloud Opacity: 0.8">Cloud Opacity</div>
+        <div class="button" data-value="Solar Geometry: 45 degrees">Solar Geometry</div>
+        <div class="button" data-value="Albedo: 0.3">Albedo</div>
+        <div class="button" data-value="PV Power: 300 W">PV Power</div>
+        <div class="button" data-value="GHI: 1000 W/m²">GHI</div>
+        <div class="button" data-value="DNI: 900 W/m²">DNI</div>
+        <div class="button" data-value="DHI: 200 W/m²">DHI</div>
+        <div class="button" data-value="GTI: 800 W/m²">GTI</div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
+        <div class="resolution-controls">
+            <button class="resolution-button active" data-resolution="5">5 Min</button>
+            <button class="resolution-button" data-resolution="10">10 Min</button>
+            <button class="resolution-button" data-resolution="15">15 Min</button>
+            <button class="resolution-button" data-resolution="30">30 Min</button>
+        </div>
+    </div>
+
+    <!-- Display for Values -->
+    <div class="value-display" id="valueDisplay">
+        Select a parameter above to see its value.
+    </div>
+
+    <!-- Environmental Factors -->
+    <div class="buttons-grid">
+        <div class="button" data-value="Pressure: 1013 hPa">Pressure</div>
+        <div class="button" data-value="Precipitation: 2 mm">Precipitation</div>
+        <div class="button" data-value="Snow Depth: 0 cm">Snow Depth</div>
+        <div class="button" data-value="Dew Point: 22°C">Dew Point</div>
+        <div class="button" data-value="Temperature: 33°C">Temperature</div>
+        <div class="button" data-value="Wind Speed: 15 km/h">Wind Speed</div>
+        <div class="button" data-value="Wind Direction: NE">Wind Direction</div>
+        <div class="button" data-value="Humidity: 60%">Humidity</div>
+    </div>
+
+    <!-- Tabs for Cloud Opacity and Solar Geometry -->
+    <div class="tabs">
+        <div class="tab-button active" data-tab="cloud-opacity">Cloud Opacity Info</div>
+        <div class="tab-button" data-tab="solar-geometry">Solar Geometry Info</div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="tabContent">
+        Cloud Opacity: This represents how much sunlight is blocked by clouds. The higher the value, the less sunlight passes through the clouds. Current opacity is 0.8 (80%).
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initializing the chart with dynamic data based on Chennai's average temperature
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    // Temperature data based on Chennai's average (33°C) with dynamic changes
+    let chartData = {
+        5: [32, 33, 34, 33, 34, 33, 32, 33, 34], // Simulated for 5 min resolution
+        10: [32.5, 33, 33.5, 34, 33.5, 34, 33, 32.5, 33], // For 10 min
+        15: [33, 33.5, 34, 33.5, 34, 33.5, 33, 33, 34], // For 15 min
+        30: [33, 33, 34, 34, 33.5, 33, 34, 34, 33]  // For 30 min
+    };
+
+    let myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['-7 Days', '-6 Days', '-5 Days', 'Today', '+1 Day', '+2 Days', '+3 Days', '+4 Days', '+5 Days'],
+            datasets: [{
+                label: 'Temperature Forecast',
+                data: chartData[5],
+                borderColor: '#ffaa66',
+                fill: false,
+                borderDash: [5, 5]
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Days'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (°C)'
+                    },
+                    min: 30,
+                    max: 36
+                }
+            }
+        }
+    });
+
+    // Event listeners for resolution buttons
+    document.querySelectorAll('.resolution-button').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.resolution-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            let resolution = this.getAttribute('data-resolution');
+            myChart.data.datasets[0].data = chartData[resolution];
+            myChart.update();
+        });
+    });
+
+    // Event listeners for environmental factor buttons
+    document.querySelectorAll('.button').forEach(button => {
+        button.addEventListener('click', function() {
+            let value = this.getAttribute('data-value');
+            document.getElementById('valueDisplay').textContent = value;
+        });
+    });
+
+    // Event listeners for tab switching (Cloud Opacity / Solar Geometry)
+    document.querySelectorAll('.tab-button').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            let tabType = this.getAttribute('data-tab');
+            if (tabType === 'cloud-opacity') {
+                document.getElementById('tabContent').textContent = "Cloud Opacity: This represents how much sunlight is blocked by clouds. The higher the value, the less sunlight passes through the clouds. Current opacity is 0.8 (80%).";
+            } else if (tabType === 'solar-geometry') {
+                document.getElementById('tabContent').textContent = "Solar Geometry: It refers to the angle at which sunlight strikes the Earth. This affects the intensity of solar radiation received. Current angle: 45 degrees.";
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
